@@ -26,7 +26,7 @@ public class CervejaDTO {
 
     @NotNull
     @Size(min = 1, max = 200)
-    private String brand;
+    private String marca;
 
     @NotNull
     @Max(500)

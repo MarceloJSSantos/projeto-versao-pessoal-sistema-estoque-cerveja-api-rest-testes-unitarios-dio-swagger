@@ -21,7 +21,7 @@ public class Cerveja {
     private String nome;
 
     @Column(nullable = false)
-    private String brand;
+    private String marca;
 
     @Column(nullable = false)
     private int quantMax;

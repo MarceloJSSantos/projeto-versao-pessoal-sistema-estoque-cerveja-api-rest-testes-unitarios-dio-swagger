@@ -9,7 +9,7 @@ import org.mapstruct.factory.Mappers;
 public interface CervejaMapper {
     CervejaMapper INSTANCE = Mappers.getMapper(CervejaMapper.class);
 
-    Cerveja toModel(CervejaDTO beerDTO);
+    Cerveja toModel(CervejaDTO cervejaDTO);
 
-    CervejaDTO toDTO(Cerveja beer);
+    CervejaDTO toDTO(Cerveja cerveja);
 }
