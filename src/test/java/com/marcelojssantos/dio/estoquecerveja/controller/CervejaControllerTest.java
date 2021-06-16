@@ -16,11 +16,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.servlet.view.json.MappingJackson2JsonView;
 
+import java.util.Collections;
+
 import static com.marcelojssantos.dio.estoquecerveja.utils.utilitarioConverteJson.comoJsonString;
 import static org.hamcrest.core.Is.is;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -28,8 +29,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class CervejaControllerTest {
 
     private static final String CERVEJA_API_URL_PATH = "/api/v1/cervejas";
-    //private static final long CERVEJA_VALIDA_ID = 1L;
-    //private static final long CERVEJA_INVALIDA_ID = 2L;
+    private static final long CERVEJA_VALIDA_ID = 1L;
+    private static final long CERVEJA_INVALIDA_ID = 2L;
     //private static final String CERVEJA_API_URL_SUBPATH_INCREMENTA = "/incrementa";
     //private static final String CERVEJA_API_URL_SUBPATH_DECREMENTA = "/decrementa";
 
@@ -50,7 +51,7 @@ public class CervejaControllerTest {
     }
 
     @Test
-    void quandoPOSTEChamadoCervejaEInserida() throws Exception {
+    void quandoPOSTEChamadoCervejaEInseridaEntaoStatusCreatedERetornado() throws Exception {
         //given
         CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
 
@@ -68,7 +69,7 @@ public class CervejaControllerTest {
     }
 
     @Test
-    void quandoPOSTEChamadoSemCampoRequeridoErroERetornado() throws Exception {
+    void quandoPOSTEChamadoSemCampoRequeridoEntaoExceptionERetornado() throws Exception {
         //given
         CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
         cervejaDTO.setMarca(null);
@@ -99,7 +100,7 @@ public class CervejaControllerTest {
     }
 
     @Test
-    void quandoGETEChamadoComNomeNaoEncontradoEntaoNaoEncontradoERetornado() throws Exception {
+    void quandoGETEChamadoComNomeNaoEncontradoEntaoStatusNotFoundRetornado() throws Exception {
         //given
         CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
 
@@ -109,6 +110,62 @@ public class CervejaControllerTest {
 
         //then
         mockMvc.perform(get(CERVEJA_API_URL_PATH + "/" + cervejaDTO.getNome())
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void quandoGETListaCervejasEChamadoERetornaCervejasEntaoStatusOkERetornado() throws Exception {
+        //given
+        CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
+
+        //when
+        when(cervejaService.listAll()).thenReturn(Collections.singletonList(cervejaDTO));
+
+        //then
+        mockMvc.perform(get(CERVEJA_API_URL_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(comoJsonString(cervejaDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].nome", is(cervejaDTO.getNome())))
+                .andExpect(jsonPath("$[0].marca", is(cervejaDTO.getMarca())))
+                .andExpect(jsonPath("$[0].tipo", is(cervejaDTO.getTipo().toString())));
+    }
+
+    @Test
+    void quandoGETListaCervejasEChamadoERetornaListaVaziaEntaoStatusOkERetornado() throws Exception {
+        //when
+        when(cervejaService.listAll()).thenReturn(Collections.emptyList());
+
+        //then
+        mockMvc.perform(get(CERVEJA_API_URL_PATH)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(comoJsonString(Collections.emptyList())))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void quandoDELETEEChamadoComIdValidoEntaoStatusNoContentERetornado() throws Exception {
+        //given
+        CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
+
+        //when
+        doNothing().when(cervejaService).deleteById(cervejaDTO.getId());
+
+        //then
+        mockMvc.perform(delete(CERVEJA_API_URL_PATH + "/" + CERVEJA_VALIDA_ID)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void quandoDELETEEChamadoComIdNaoEncontradoEntaoStatusNotFoundERetornado() throws Exception {
+        //when
+        doThrow(CervejaNaoEncontradaException.class).when(cervejaService)
+                .deleteById(CERVEJA_INVALIDA_ID);
+
+        //then
+        mockMvc.perform(delete(CERVEJA_API_URL_PATH + "/" + CERVEJA_INVALIDA_ID)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }

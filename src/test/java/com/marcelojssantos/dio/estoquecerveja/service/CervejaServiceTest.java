@@ -14,28 +14,28 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.hamcrest.MatcherAssert.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.*;
-
-import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
 public class CervejaServiceTest {
 
+    private final CervejaMapper cervejaMapper = CervejaMapper.INSTANCE;
     @InjectMocks
     private CervejaService cervejaService;
-
     @Mock
     private CervejaRepository cervejaRepository;
-
-    private final CervejaMapper cervejaMapper = CervejaMapper.INSTANCE;
 
     @Test
     void quandoCervejaEInformadaEntaoElaDeveSerInserida() throws CervejaEstaRegistradaException {
         //given
         CervejaDTO cervejaDTOEsperada = CervejaDTOBuilder.builder().build().toCervejaDTO();
-        Cerveja cervejaSalva =  cervejaMapper.toModel(cervejaDTOEsperada);
+        Cerveja cervejaSalva = cervejaMapper.toModel(cervejaDTOEsperada);
 
         //when
         when(cervejaRepository.findByNome(cervejaDTOEsperada.getNome())).thenReturn(Optional.empty());
@@ -49,10 +49,10 @@ public class CervejaServiceTest {
     }
 
     @Test
-    void quandoCervejaInformadaJaExisteEntaoUmaExceptionDeveSerLancada() throws CervejaEstaRegistradaException{
+    void quandoCervejaInformadaJaExisteEntaoExceptionERetornada() {
         //given
         CervejaDTO cervejaDTOEsperada = CervejaDTOBuilder.builder().build().toCervejaDTO();
-        Cerveja cervejaDuplicada =  cervejaMapper.toModel(cervejaDTOEsperada);
+        Cerveja cervejaDuplicada = cervejaMapper.toModel(cervejaDTOEsperada);
 
         //when
         when(cervejaRepository.findByNome(cervejaDTOEsperada.getNome())).thenReturn(Optional.of(cervejaDuplicada));
@@ -65,10 +65,10 @@ public class CervejaServiceTest {
 
 
     @Test
-    void quandoNomeValidoCervejaEInformadoEntaoUmaCervejaERetornada() throws CervejaNaoEncontradaException {
+    void quandoNomeValidoCervejaEInformadoEntaoCervejaERetornada() throws CervejaNaoEncontradaException {
         //given
         CervejaDTO cervejaDTOEsperada = CervejaDTOBuilder.builder().build().toCervejaDTO();
-        Cerveja cervejaEncontrada =  cervejaMapper.toModel(cervejaDTOEsperada);
+        Cerveja cervejaEncontrada = cervejaMapper.toModel(cervejaDTOEsperada);
 
         //when
         when(cervejaRepository.findByNome(cervejaEncontrada.getNome())).thenReturn(Optional.of(cervejaEncontrada));
@@ -79,7 +79,7 @@ public class CervejaServiceTest {
     }
 
     @Test
-    void quandoNomeCervejaEInformadoNaoEEncontradoEntaoUmExceptionERetornado() throws CervejaNaoEncontradaException {
+    void quandoNomeCervejaEInformadoNaoEEncontradoEntaoExceptionERetornado() {
         //given
         CervejaDTO cervejaDTOEsperada = CervejaDTOBuilder.builder().build().toCervejaDTO();
 
@@ -89,5 +89,63 @@ public class CervejaServiceTest {
         //then
         Assertions.assertThrows(CervejaNaoEncontradaException.class,
                 () -> cervejaService.findByNome(cervejaDTOEsperada.getNome()));
+    }
+
+    @Test
+    void quandoListaDeCervejasEChamadaTendoCervejasEntaoRetornaListaDeCerveja() {
+        //given
+        CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
+        Cerveja cerveja = cervejaMapper.toModel(cervejaDTO);
+
+        //when
+        when(cervejaRepository.findAll()).thenReturn(Collections.singletonList(cerveja));
+
+        //then
+        List<CervejaDTO> listaCervejas = cervejaService.listAll();
+        assertThat(listaCervejas, is(not(empty())));
+        assertThat(listaCervejas.get(0), is(equalTo(cervejaDTO)));
+    }
+
+    @Test
+    void quandoListaDeCervejasEChamadaNaoTendoCervejasEntaoRetornaListaVazia() {
+        //when
+        when(cervejaRepository.findAll()).thenReturn(Collections.emptyList());
+
+        //then
+        List<CervejaDTO> listaCervejas = cervejaService.listAll();
+        assertThat(listaCervejas, is(empty()));
+    }
+
+    @Test
+    void quandoExcluirCervejaComIdValidoEntaoCervejaEExcluida() throws CervejaNaoEncontradaException {
+        //given
+        CervejaDTO cervejaDTODeletadaEsperada = CervejaDTOBuilder.builder().build().toCervejaDTO();
+        Cerveja cervejaDeletadaEsperada = cervejaMapper.toModel(cervejaDTODeletadaEsperada);
+
+        //when
+        when(cervejaRepository.findById(cervejaDTODeletadaEsperada.getId()))
+                .thenReturn(Optional.of(cervejaDeletadaEsperada));
+        doNothing().when(cervejaRepository).deleteById(cervejaDTODeletadaEsperada.getId());
+
+        //then
+        cervejaService.deleteById(cervejaDTODeletadaEsperada.getId());
+        verify(cervejaRepository, times(1))
+                .findById(cervejaDTODeletadaEsperada.getId());
+        verify(cervejaRepository, times(1))
+                .deleteById(cervejaDTODeletadaEsperada.getId());
+    }
+
+    @Test
+    void quandoExcluirCervejaComIdNaoEEncontradoEntaoExceptionERetornado() {
+        //given
+        CervejaDTO cervejaDTODeletadaEsperada = CervejaDTOBuilder.builder().build().toCervejaDTO();
+
+        //when
+        when(cervejaRepository.findById(cervejaDTODeletadaEsperada.getId()))
+                .thenReturn(Optional.empty());
+
+        //then
+        Assertions.assertThrows(CervejaNaoEncontradaException.class,
+                () -> cervejaService.deleteById(cervejaDTODeletadaEsperada.getId()));
     }
 }
