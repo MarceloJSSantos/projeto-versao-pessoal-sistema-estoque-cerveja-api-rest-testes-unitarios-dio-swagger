@@ -2,7 +2,9 @@ package com.marcelojssantos.dio.estoquecerveja.controller;
 
 import com.marcelojssantos.dio.estoquecerveja.builder.CervejaDTOBuilder;
 import com.marcelojssantos.dio.estoquecerveja.dto.CervejaDTO;
+import com.marcelojssantos.dio.estoquecerveja.dto.QuantidadeDTO;
 import com.marcelojssantos.dio.estoquecerveja.exception.CervejaNaoEncontradaException;
+import com.marcelojssantos.dio.estoquecerveja.exception.EstoqueCervejaExcedidoException;
 import com.marcelojssantos.dio.estoquecerveja.service.CervejaService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,7 +33,7 @@ public class CervejaControllerTest {
     private static final String CERVEJA_API_URL_PATH = "/api/v1/cervejas";
     private static final long CERVEJA_VALIDA_ID = 1L;
     private static final long CERVEJA_INVALIDA_ID = 2L;
-    //private static final String CERVEJA_API_URL_SUBPATH_INCREMENTA = "/incrementa";
+    private static final String CERVEJA_API_URL_SUBPATH_INCREMENTA = "/incrementa";
     //private static final String CERVEJA_API_URL_SUBPATH_DECREMENTA = "/decrementa";
 
     @InjectMocks
@@ -167,6 +169,63 @@ public class CervejaControllerTest {
         //then
         mockMvc.perform(delete(CERVEJA_API_URL_PATH + "/" + CERVEJA_INVALIDA_ID)
                 .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void quandoPATCHIncrementoEChamadoEntaoStatusOkERetornado() throws Exception {
+        QuantidadeDTO quantidadeDTO = QuantidadeDTO.builder()
+                .quantidade(10)
+                .build();
+
+        CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
+        cervejaDTO.setQuantidade(cervejaDTO.getQuantidade() + quantidadeDTO.getQuantidade());
+
+        when(cervejaService.increment(CERVEJA_VALIDA_ID, quantidadeDTO.getQuantidade()))
+                .thenReturn(cervejaDTO);
+
+        mockMvc.perform(patch(CERVEJA_API_URL_PATH + "/" + CERVEJA_VALIDA_ID
+                + CERVEJA_API_URL_SUBPATH_INCREMENTA)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(comoJsonString(quantidadeDTO))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.nome", is(cervejaDTO.getNome())))
+                .andExpect(jsonPath("$.marca", is(cervejaDTO.getMarca())))
+                .andExpect(jsonPath("$.tipo", is(cervejaDTO.getTipo().toString())))
+                .andExpect(jsonPath("$.quantidade", is(cervejaDTO.getQuantidade())));
+    }
+
+    @Test
+    void quandoPATCHIncrementoEChamadoEQuantEMaiorMaxQuantEntaoExceptionERetornada()
+            throws Exception {
+        QuantidadeDTO quantidadeDTO = QuantidadeDTO.builder()
+                .quantidade(30)
+                .build();
+
+        CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
+        cervejaDTO.setQuantidade(cervejaDTO.getQuantidade() + quantidadeDTO.getQuantidade());
+
+        when(cervejaService.increment(CERVEJA_VALIDA_ID, quantidadeDTO.getQuantidade()))
+                .thenThrow(EstoqueCervejaExcedidoException.class);
+
+        mockMvc.perform(patch(CERVEJA_API_URL_PATH + "/" + CERVEJA_VALIDA_ID
+                + CERVEJA_API_URL_SUBPATH_INCREMENTA)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(comoJsonString(quantidadeDTO))).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void quandoPATCHIncrementoEChamadoComIdInvalidoEntaoStatusNotFoundERetornado() throws Exception {
+        QuantidadeDTO quantidadeDTO = QuantidadeDTO.builder()
+                .quantidade(30)
+                .build();
+
+        when(cervejaService.increment(CERVEJA_INVALIDA_ID, quantidadeDTO.getQuantidade()))
+                .thenThrow(CervejaNaoEncontradaException.class);
+
+        mockMvc.perform(patch(CERVEJA_API_URL_PATH + "/" + CERVEJA_INVALIDA_ID
+                + CERVEJA_API_URL_SUBPATH_INCREMENTA)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(comoJsonString(quantidadeDTO)))
                 .andExpect(status().isNotFound());
     }
 }

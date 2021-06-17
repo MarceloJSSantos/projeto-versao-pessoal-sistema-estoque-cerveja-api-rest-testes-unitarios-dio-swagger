@@ -54,8 +54,8 @@ public class CervejaService {
         if (quantidadeAposIncremento <= cervejaParaAumentarEstoque.getQuantMax()) {
             cervejaParaAumentarEstoque.setQuantidade(cervejaParaAumentarEstoque.getQuantidade() +
                     quantidadeParaIncrementar);
-            Cerveja incrementedBeerStock = cervejaRepository.save(cervejaParaAumentarEstoque);
-            return cervejaMapper.toDTO(incrementedBeerStock);
+            Cerveja cervejaEstoqueIncrementado = cervejaRepository.save(cervejaParaAumentarEstoque);
+            return cervejaMapper.toDTO(cervejaEstoqueIncrementado);
         }
         throw new EstoqueCervejaExcedidoException(id, quantidadeParaIncrementar);
     }
