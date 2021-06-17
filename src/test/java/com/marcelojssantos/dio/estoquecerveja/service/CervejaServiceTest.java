@@ -5,7 +5,8 @@ import com.marcelojssantos.dio.estoquecerveja.dto.CervejaDTO;
 import com.marcelojssantos.dio.estoquecerveja.entity.Cerveja;
 import com.marcelojssantos.dio.estoquecerveja.exception.CervejaEstaRegistradaException;
 import com.marcelojssantos.dio.estoquecerveja.exception.CervejaNaoEncontradaException;
-import com.marcelojssantos.dio.estoquecerveja.exception.EstoqueCervejaExcedidoException;
+import com.marcelojssantos.dio.estoquecerveja.exception.EstoqueCervejaMaxQuantExcedidoException;
+import com.marcelojssantos.dio.estoquecerveja.exception.EstoqueCervejaMaxQuantMenorZeroException;
 import com.marcelojssantos.dio.estoquecerveja.mapper.CervejaMapper;
 import com.marcelojssantos.dio.estoquecerveja.repository.CervejaRepository;
 import org.junit.jupiter.api.Test;
@@ -34,7 +35,7 @@ public class CervejaServiceTest {
     private CervejaRepository cervejaRepository;
 
     @Test
-    void quandoCervejaEInformadaEntaoElaDeveSerInserida() throws CervejaEstaRegistradaException {
+    void quandoInsertEChamadoEntaoCervejaDeveSerInserida() throws CervejaEstaRegistradaException {
         //given
         CervejaDTO cervejaDTOEsperada = CervejaDTOBuilder.builder().build().toCervejaDTO();
         Cerveja cervejaSalva = cervejaMapper.toModel(cervejaDTOEsperada);
@@ -51,7 +52,7 @@ public class CervejaServiceTest {
     }
 
     @Test
-    void quandoCervejaInformadaJaExisteEntaoExceptionERetornada() {
+    void quandoInsertEChamadoECervejaJaExisteEntaoExceptionERetornada() {
         //given
         CervejaDTO cervejaDTOEsperada = CervejaDTOBuilder.builder().build().toCervejaDTO();
         Cerveja cervejaDuplicada = cervejaMapper.toModel(cervejaDTOEsperada);
@@ -65,9 +66,8 @@ public class CervejaServiceTest {
 
     }
 
-
     @Test
-    void quandoNomeValidoCervejaEInformadoEntaoCervejaERetornada() throws CervejaNaoEncontradaException {
+    void quandoFindByNomeEChamadoComNomeValidoEntaoCervejaERetornada() throws CervejaNaoEncontradaException {
         //given
         CervejaDTO cervejaDTOEsperada = CervejaDTOBuilder.builder().build().toCervejaDTO();
         Cerveja cervejaEncontrada = cervejaMapper.toModel(cervejaDTOEsperada);
@@ -81,7 +81,7 @@ public class CervejaServiceTest {
     }
 
     @Test
-    void quandoNomeCervejaEInformadoNaoEEncontradoEntaoExceptionERetornado() {
+    void quandoFindByNomeEChamadoENaoEEncontradoEntaoExceptionERetornado() {
         //given
         CervejaDTO cervejaDTOEsperada = CervejaDTOBuilder.builder().build().toCervejaDTO();
 
@@ -94,7 +94,7 @@ public class CervejaServiceTest {
     }
 
     @Test
-    void quandoListaDeCervejasEChamadaTendoCervejasEntaoRetornaListaDeCerveja() {
+    void quandoListAllEChamadaTendoCervejasEntaoRetornaListaDeCerveja() {
         //given
         CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
         Cerveja cerveja = cervejaMapper.toModel(cervejaDTO);
@@ -109,7 +109,7 @@ public class CervejaServiceTest {
     }
 
     @Test
-    void quandoListaDeCervejasEChamadaNaoTendoCervejasEntaoRetornaListaVazia() {
+    void quandoListAllEChamadaNaoTendoCervejasEntaoRetornaListaVazia() {
         //when
         when(cervejaRepository.findAll()).thenReturn(Collections.emptyList());
 
@@ -119,7 +119,7 @@ public class CervejaServiceTest {
     }
 
     @Test
-    void quandoExcluirCervejaComIdValidoEntaoCervejaEExcluida() throws CervejaNaoEncontradaException {
+    void quandoDeleteByIdEChamadoComIdValidoEntaoCervejaEExcluida() throws CervejaNaoEncontradaException {
         //given
         CervejaDTO cervejaDTODeletadaEsperada = CervejaDTOBuilder.builder().build().toCervejaDTO();
         Cerveja cervejaDeletadaEsperada = cervejaMapper.toModel(cervejaDTODeletadaEsperada);
@@ -138,7 +138,7 @@ public class CervejaServiceTest {
     }
 
     @Test
-    void quandoExcluirCervejaComIdNaoEEncontradoEntaoExceptionERetornado() {
+    void quandoDeleteByIdEChamadoComIdNaoEEncontradoEntaoExceptionERetornado() {
         //given
         CervejaDTO cervejaDTODeletadaEsperada = CervejaDTOBuilder.builder().build().toCervejaDTO();
 
@@ -152,7 +152,7 @@ public class CervejaServiceTest {
     }
 
     @Test
-    void quandoIncrementoEChamadoEntaoIncrementaQuantidadeCerveja() throws CervejaNaoEncontradaException, EstoqueCervejaExcedidoException {
+    void quandoChangeStockEChamadoEntaoIncrementaQuantidadeCerveja() throws CervejaNaoEncontradaException, EstoqueCervejaMaxQuantExcedidoException, EstoqueCervejaMaxQuantMenorZeroException {
         //given
         CervejaDTO cervejaDTOEsperada = CervejaDTOBuilder.builder().build().toCervejaDTO();
         Cerveja cervejaEsperada = cervejaMapper.toModel(cervejaDTOEsperada);
@@ -161,18 +161,18 @@ public class CervejaServiceTest {
         when(cervejaRepository.findById(cervejaDTOEsperada.getId())).thenReturn(Optional.of(cervejaEsperada));
         when(cervejaRepository.save(cervejaEsperada)).thenReturn(cervejaEsperada);
 
-        int quantidadeParaIncrementar = 10;
-        int quantidadeEsperadaAntesIncremento = cervejaDTOEsperada.getQuantidade() + quantidadeParaIncrementar;
+        int quantidadeParaAlterar = 10;
+        int quantidadeEsperadaAntesIncremento = cervejaDTOEsperada.getQuantidade() + quantidadeParaAlterar;
 
         // then
-        CervejaDTO cervejaDTOIncrementada = cervejaService.increment(cervejaDTOEsperada.getId(), quantidadeParaIncrementar);
+        CervejaDTO cervejaDTOIncrementada = cervejaService.changeStock(cervejaDTOEsperada.getId(), quantidadeParaAlterar);
 
         assertThat(quantidadeEsperadaAntesIncremento, equalTo(cervejaDTOIncrementada.getQuantidade()));
         assertThat(quantidadeEsperadaAntesIncremento, lessThan(cervejaDTOIncrementada.getQuantMax()));
     }
 
     @Test
-    void quandoIncrementoEMaiorQueMaxQuantidadeEntaoExceptionERetornada() {
+    void quandoChangeStockEQuantidadeEMaiorQueMaxQuantidadeEntaoExceptionERetornada() {
         //given
         CervejaDTO cervejaDTOEsperada = CervejaDTOBuilder.builder().build().toCervejaDTO();
         Cerveja cervejaEsperada = cervejaMapper.toModel(cervejaDTOEsperada);
@@ -181,30 +181,42 @@ public class CervejaServiceTest {
         when(cervejaRepository.findById(cervejaDTOEsperada.getId())).thenReturn(Optional.of(cervejaEsperada));
 
         //then
-        int quantidadeParaIncrementar = 80;
-        assertThrows(EstoqueCervejaExcedidoException.class,
-                () -> cervejaService.increment(cervejaDTOEsperada.getId(), quantidadeParaIncrementar));
+        int quantidadeParaAlterar = 80;
+        assertThrows(EstoqueCervejaMaxQuantExcedidoException.class,
+                () -> cervejaService.changeStock(cervejaDTOEsperada.getId(), quantidadeParaAlterar));
     }
 
     @Test
-    void quandoIncrementoDepoisSomaEMaiorQueMaxQuantidadeEntaoExceptionERetornada() {
+    void quandoChangeStockDepoisSomaEMaiorQueMaxQuantidadeEntaoExceptionERetornada() {
         CervejaDTO cervejaDTOEsperada = CervejaDTOBuilder.builder().build().toCervejaDTO();
         Cerveja cervejaEsperada = cervejaMapper.toModel(cervejaDTOEsperada);
 
         when(cervejaRepository.findById(cervejaDTOEsperada.getId())).thenReturn(Optional.of(cervejaEsperada));
 
-        int quantityToIncrement = 45;
-        assertThrows(EstoqueCervejaExcedidoException.class, () -> cervejaService
-                .increment(cervejaDTOEsperada.getId(), quantityToIncrement));
+        int quantidadeParaAlterar = 45;
+        assertThrows(EstoqueCervejaMaxQuantExcedidoException.class, () -> cervejaService
+                .changeStock(cervejaDTOEsperada.getId(), quantidadeParaAlterar));
     }
 
     @Test
-    void quandoIncrementoEChamadoEIdNaoEncontradoEntaoExceptionERetornada() {
+    void quandoChangeStockEChamadoEIdNaoEncontradoEntaoExceptionERetornada() {
         int quantidadeParaIncrementar = 10;
 
         when(cervejaRepository.findById(CERVEJA_ID_INVALIDO)).thenReturn(Optional.empty());
 
         assertThrows(CervejaNaoEncontradaException.class,
-                () -> cervejaService.increment(CERVEJA_ID_INVALIDO, quantidadeParaIncrementar));
+                () -> cervejaService.changeStock(CERVEJA_ID_INVALIDO, quantidadeParaIncrementar));
+    }
+
+    @Test
+    void quandoChangeStockDepoisSomaEMenorQueQuantidadeZeroEntaoExceptionERetornada() {
+        CervejaDTO cervejaDTOEsperada = CervejaDTOBuilder.builder().build().toCervejaDTO();
+        Cerveja cervejaEsperada = cervejaMapper.toModel(cervejaDTOEsperada);
+
+        when(cervejaRepository.findById(cervejaDTOEsperada.getId())).thenReturn(Optional.of(cervejaEsperada));
+
+        int quantidadeParaAlterar = -80;
+        assertThrows(EstoqueCervejaMaxQuantMenorZeroException.class, () -> cervejaService
+                .changeStock(cervejaDTOEsperada.getId(), quantidadeParaAlterar));
     }
 }

@@ -4,7 +4,8 @@ import com.marcelojssantos.dio.estoquecerveja.dto.CervejaDTO;
 import com.marcelojssantos.dio.estoquecerveja.dto.QuantidadeDTO;
 import com.marcelojssantos.dio.estoquecerveja.exception.CervejaEstaRegistradaException;
 import com.marcelojssantos.dio.estoquecerveja.exception.CervejaNaoEncontradaException;
-import com.marcelojssantos.dio.estoquecerveja.exception.EstoqueCervejaExcedidoException;
+import com.marcelojssantos.dio.estoquecerveja.exception.EstoqueCervejaMaxQuantExcedidoException;
+import com.marcelojssantos.dio.estoquecerveja.exception.EstoqueCervejaMaxQuantMenorZeroException;
 import com.marcelojssantos.dio.estoquecerveja.service.CervejaService;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,11 +45,12 @@ public class CervejaController {
         cervejaService.deleteById(id);
     }
 
-    @PatchMapping("/{id}/incrementa")
-    public CervejaDTO incrementaQuantidade(@PathVariable Long id,
-                                           @RequestBody @Valid QuantidadeDTO quantidadeDTO)
-            throws CervejaNaoEncontradaException, EstoqueCervejaExcedidoException {
-        return cervejaService.increment(id, quantidadeDTO.getQuantidade());
+    @PatchMapping("/{id}/alteraestoque")
+    public CervejaDTO alteraQuantidade(@PathVariable Long id,
+                                       @RequestBody @Valid QuantidadeDTO quantidadeDTO)
+            throws CervejaNaoEncontradaException, EstoqueCervejaMaxQuantExcedidoException,
+            EstoqueCervejaMaxQuantMenorZeroException {
+        return cervejaService.changeStock(id, quantidadeDTO.getQuantidade());
     }
 
 }

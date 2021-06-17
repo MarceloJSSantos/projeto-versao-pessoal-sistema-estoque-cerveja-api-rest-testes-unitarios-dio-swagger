@@ -4,7 +4,8 @@ import com.marcelojssantos.dio.estoquecerveja.dto.CervejaDTO;
 import com.marcelojssantos.dio.estoquecerveja.entity.Cerveja;
 import com.marcelojssantos.dio.estoquecerveja.exception.CervejaEstaRegistradaException;
 import com.marcelojssantos.dio.estoquecerveja.exception.CervejaNaoEncontradaException;
-import com.marcelojssantos.dio.estoquecerveja.exception.EstoqueCervejaExcedidoException;
+import com.marcelojssantos.dio.estoquecerveja.exception.EstoqueCervejaMaxQuantExcedidoException;
+import com.marcelojssantos.dio.estoquecerveja.exception.EstoqueCervejaMaxQuantMenorZeroException;
 import com.marcelojssantos.dio.estoquecerveja.mapper.CervejaMapper;
 import com.marcelojssantos.dio.estoquecerveja.repository.CervejaRepository;
 import lombok.AllArgsConstructor;
@@ -47,17 +48,23 @@ public class CervejaService {
         cervejaRepository.deleteById(id);
     }
 
-    public CervejaDTO increment(Long id, int quantidadeParaIncrementar) throws CervejaNaoEncontradaException,
-            EstoqueCervejaExcedidoException {
-        Cerveja cervejaParaAumentarEstoque = verificaSeExiste(id);
-        int quantidadeAposIncremento = quantidadeParaIncrementar + cervejaParaAumentarEstoque.getQuantidade();
-        if (quantidadeAposIncremento <= cervejaParaAumentarEstoque.getQuantMax()) {
-            cervejaParaAumentarEstoque.setQuantidade(cervejaParaAumentarEstoque.getQuantidade() +
+    public CervejaDTO changeStock(Long id, int quantidadeParaIncrementar)
+            throws CervejaNaoEncontradaException,
+            EstoqueCervejaMaxQuantExcedidoException,
+            EstoqueCervejaMaxQuantMenorZeroException {
+        Cerveja cervejaParaAlterarEstoque = verificaSeExiste(id);
+        int quantidadeAposIncremento = quantidadeParaIncrementar + cervejaParaAlterarEstoque.getQuantidade();
+        if ((quantidadeAposIncremento >= 0) && (quantidadeAposIncremento <= cervejaParaAlterarEstoque.getQuantMax())){
+            cervejaParaAlterarEstoque.setQuantidade(cervejaParaAlterarEstoque.getQuantidade() +
                     quantidadeParaIncrementar);
-            Cerveja cervejaEstoqueIncrementado = cervejaRepository.save(cervejaParaAumentarEstoque);
-            return cervejaMapper.toDTO(cervejaEstoqueIncrementado);
+            Cerveja cervejaEstoqueAlterado = cervejaRepository.save(cervejaParaAlterarEstoque);
+            return cervejaMapper.toDTO(cervejaEstoqueAlterado);
         }
-        throw new EstoqueCervejaExcedidoException(id, quantidadeParaIncrementar);
+        if (quantidadeParaIncrementar > 0){
+            throw new EstoqueCervejaMaxQuantExcedidoException(id, quantidadeParaIncrementar);
+        } else {
+            throw new EstoqueCervejaMaxQuantMenorZeroException(id, quantidadeParaIncrementar);
+        }
     }
 
     private void verificaSeEstaRegistrado(String nome) throws CervejaEstaRegistradaException {

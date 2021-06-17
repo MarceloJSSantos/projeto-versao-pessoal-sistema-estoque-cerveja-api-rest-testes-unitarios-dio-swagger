@@ -4,7 +4,8 @@ import com.marcelojssantos.dio.estoquecerveja.builder.CervejaDTOBuilder;
 import com.marcelojssantos.dio.estoquecerveja.dto.CervejaDTO;
 import com.marcelojssantos.dio.estoquecerveja.dto.QuantidadeDTO;
 import com.marcelojssantos.dio.estoquecerveja.exception.CervejaNaoEncontradaException;
-import com.marcelojssantos.dio.estoquecerveja.exception.EstoqueCervejaExcedidoException;
+import com.marcelojssantos.dio.estoquecerveja.exception.EstoqueCervejaMaxQuantExcedidoException;
+import com.marcelojssantos.dio.estoquecerveja.exception.EstoqueCervejaMaxQuantMenorZeroException;
 import com.marcelojssantos.dio.estoquecerveja.service.CervejaService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,7 +54,7 @@ public class CervejaControllerTest {
     }
 
     @Test
-    void quandoPOSTEChamadoCervejaEInseridaEntaoStatusCreatedERetornado() throws Exception {
+    void quandoPOSTInsereCervejaEChamadoCervejaEInseridaEntaoStatusCreatedERetornado() throws Exception {
         //given
         CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
 
@@ -71,7 +72,7 @@ public class CervejaControllerTest {
     }
 
     @Test
-    void quandoPOSTEChamadoSemCampoRequeridoEntaoExceptionERetornado() throws Exception {
+    void quandoPOSTInsereCervejaEChamadoSemCampoRequeridoEntaoExceptionERetornado() throws Exception {
         //given
         CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
         cervejaDTO.setMarca(null);
@@ -84,7 +85,7 @@ public class CervejaControllerTest {
     }
 
     @Test
-    void quandoGETEChamadoComNomeValidoEntaoStatusOKERetornado() throws Exception {
+    void quandoGETEncontraPorNomeEChamadoComNomeValidoEntaoStatusOKERetornado() throws Exception {
         //given
         CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
 
@@ -102,7 +103,7 @@ public class CervejaControllerTest {
     }
 
     @Test
-    void quandoGETEChamadoComNomeNaoEncontradoEntaoStatusNotFoundRetornado() throws Exception {
+    void quandoGETEncontraPorNomeEChamadoComNomeNaoEncontradoEntaoStatusNotFoundRetornado() throws Exception {
         //given
         CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
 
@@ -147,7 +148,7 @@ public class CervejaControllerTest {
     }
 
     @Test
-    void quandoDELETEEChamadoComIdValidoEntaoStatusNoContentERetornado() throws Exception {
+    void quandoDELETEDeletaPorIdEChamadoComIdValidoEntaoStatusNoContentERetornado() throws Exception {
         //given
         CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
 
@@ -161,7 +162,7 @@ public class CervejaControllerTest {
     }
 
     @Test
-    void quandoDELETEEChamadoComIdNaoEncontradoEntaoStatusNotFoundERetornado() throws Exception {
+    void quandoDELETEDeletaPorIdEChamadoComIdNaoEncontradoEntaoStatusNotFoundERetornado() throws Exception {
         //when
         doThrow(CervejaNaoEncontradaException.class).when(cervejaService)
                 .deleteById(CERVEJA_INVALIDA_ID);
@@ -173,7 +174,7 @@ public class CervejaControllerTest {
     }
 
     @Test
-    void quandoPATCHIncrementoEChamadoEntaoStatusOkERetornado() throws Exception {
+    void quandoPATCHAlteraQuantidadeEChamadoEntaoStatusOkERetornado() throws Exception {
         QuantidadeDTO quantidadeDTO = QuantidadeDTO.builder()
                 .quantidade(10)
                 .build();
@@ -181,7 +182,7 @@ public class CervejaControllerTest {
         CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
         cervejaDTO.setQuantidade(cervejaDTO.getQuantidade() + quantidadeDTO.getQuantidade());
 
-        when(cervejaService.increment(CERVEJA_VALIDA_ID, quantidadeDTO.getQuantidade()))
+        when(cervejaService.changeStock(CERVEJA_VALIDA_ID, quantidadeDTO.getQuantidade()))
                 .thenReturn(cervejaDTO);
 
         mockMvc.perform(patch(CERVEJA_API_URL_PATH + "/" + CERVEJA_VALIDA_ID
@@ -195,7 +196,7 @@ public class CervejaControllerTest {
     }
 
     @Test
-    void quandoPATCHIncrementoEChamadoEQuantEMaiorMaxQuantEntaoExceptionERetornada()
+    void quandoPATCHAlteraQuantidadeEChamadoESomaEMaiorMaxQuantEntaoExceptionERetornada()
             throws Exception {
         QuantidadeDTO quantidadeDTO = QuantidadeDTO.builder()
                 .quantidade(30)
@@ -204,8 +205,8 @@ public class CervejaControllerTest {
         CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
         cervejaDTO.setQuantidade(cervejaDTO.getQuantidade() + quantidadeDTO.getQuantidade());
 
-        when(cervejaService.increment(CERVEJA_VALIDA_ID, quantidadeDTO.getQuantidade()))
-                .thenThrow(EstoqueCervejaExcedidoException.class);
+        when(cervejaService.changeStock(CERVEJA_VALIDA_ID, quantidadeDTO.getQuantidade()))
+                .thenThrow(EstoqueCervejaMaxQuantExcedidoException.class);
 
         mockMvc.perform(patch(CERVEJA_API_URL_PATH + "/" + CERVEJA_VALIDA_ID
                 + CERVEJA_API_URL_SUBPATH_INCREMENTA)
@@ -214,12 +215,31 @@ public class CervejaControllerTest {
     }
 
     @Test
-    void quandoPATCHIncrementoEChamadoComIdInvalidoEntaoStatusNotFoundERetornado() throws Exception {
+    void quandoPATCHAlteraQuantidadeEChamadoESomaEMenorQueQuantidadeZeroEntaoExceptionERetornada()
+            throws Exception {
+        QuantidadeDTO quantidadeDTO = QuantidadeDTO.builder()
+                .quantidade(-30)
+                .build();
+
+        CervejaDTO cervejaDTO = CervejaDTOBuilder.builder().build().toCervejaDTO();
+        cervejaDTO.setQuantidade(cervejaDTO.getQuantidade() + quantidadeDTO.getQuantidade());
+
+        when(cervejaService.changeStock(CERVEJA_VALIDA_ID, quantidadeDTO.getQuantidade()))
+                .thenThrow(EstoqueCervejaMaxQuantMenorZeroException.class);
+
+        mockMvc.perform(patch(CERVEJA_API_URL_PATH + "/" + CERVEJA_VALIDA_ID
+                + CERVEJA_API_URL_SUBPATH_INCREMENTA)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(comoJsonString(quantidadeDTO))).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void quandoPATCHAlteraQuantidadeEChamadoComIdInvalidoEntaoStatusNotFoundERetornado() throws Exception {
         QuantidadeDTO quantidadeDTO = QuantidadeDTO.builder()
                 .quantidade(30)
                 .build();
 
-        when(cervejaService.increment(CERVEJA_INVALIDA_ID, quantidadeDTO.getQuantidade()))
+        when(cervejaService.changeStock(CERVEJA_INVALIDA_ID, quantidadeDTO.getQuantidade()))
                 .thenThrow(CervejaNaoEncontradaException.class);
 
         mockMvc.perform(patch(CERVEJA_API_URL_PATH + "/" + CERVEJA_INVALIDA_ID
