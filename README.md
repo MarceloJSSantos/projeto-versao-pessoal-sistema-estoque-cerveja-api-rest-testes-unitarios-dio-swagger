@@ -131,4 +131,4 @@ Após executar todos os módulos, basta apenas abrir os endpoints abaixo:
   ````http://localhost:8080/swagger-ui/index.html````
 4) (opcional) Criar o arquivo de configuração do Swagger ("com.marcelojssantos.dio.estoquecerveja.config.SwaggerConfig")
 
-**nota**: [Collection do Postman](./collection Postman/APIs Cerveja.postman_collection.json)
+**nota**: [Collection do Postman]('./collection Postman/"APIs Cerveja".postman_collection.json')
