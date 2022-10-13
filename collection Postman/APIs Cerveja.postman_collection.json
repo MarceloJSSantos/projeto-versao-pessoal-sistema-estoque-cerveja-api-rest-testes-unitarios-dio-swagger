@@ -1,0 +1,164 @@
+{
+	"info": {
+		"_postman_id": "4234bbbb-2fc1-4b53-ab64-eea91d2112f5",
+		"name": "APIs Cerveja",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "cervejas cadastradas",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/v1/cervejas",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"cervejas"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "adiciona uma cerveja",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"nome\": \"Brahma 1\",\r\n    \"marca\": \"Brahma\",\r\n    \"quantMax\": 100,\r\n    \"quantidade\": 50,\r\n    \"tipo\": \"LAGER\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/v1/cervejas",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"cervejas"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "retorna cerveja cadastrada conforme nome passado",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "deleta uma cerveja cadastrada",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/v1/cervejas/5",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"cervejas",
+						"5"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "altera o estoque de uma cervrja conforme ID passado",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\"quantidade\":-10\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/v1/cervejas/{id}/alteraestoque",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"cervejas",
+						"{id}",
+						"alteraestoque"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "JASON Swagger v3",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/v3/api-docs/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v3",
+						"api-docs",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "JASON Swagger v2",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/v3/api-docs/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"v3",
+						"api-docs",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

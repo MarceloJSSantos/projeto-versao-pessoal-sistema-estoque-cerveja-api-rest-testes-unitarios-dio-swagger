@@ -1,4 +1,4 @@
-# Projeto Sistema de Estoque de Cervejas (VERSÃO PESSOAL)
+# Projeto Sistema de Estoque de Cervejas (VERSÃO PESSOAL) - versão c/ testes unitários e documentação das APIs c/ Swagger
 
 repositório com a VERSÃO PESSOAL do projeto prático "Controle de Estoque de Cervejas" do Bootcamp GFT START #2 Java da [DIO](https://digitalinnovation.one/).
 
@@ -108,3 +108,27 @@ Após executar todos os módulos, basta apenas abrir os endpoints abaixo:
 | PATCH  | http://localhost:8080/api/v1/cervejas/{id}/alteraestoque | {<br/>    "quantidade":-10<br/>}                             |
 
 **nota**: a API "".../alteraestoque" faz tanto o incremento, quanto o decremento da quantidade , para isso fiz uma readequação do projeto original para tal.
+
+#### Documentação das APIs c/ Swagger
+
+##### Passos:
+1) Incluir as dependências do Swagger 2.0 no pom.xml;
+  ````xml
+    <dependency>
+      <groupId>io.springfox</groupId>
+      <artifactId>springfox-boot-starter</artifactId>
+      <version>3.0.0</version>
+    </dependency>
+    <dependency>
+      <groupId>io.springfox</groupId>
+      <artifactId>springfox-swagger-ui</artifactId>
+      <version>3.0.0</version>
+    </dependency>
+  ````
+2) Após é só executar o projeto e a documentação no formato JSON estará em:
+  ````http://localhost:8080/v3/api-docs/````
+3) E a versão da documentação com a interface de usuário do Swagger:
+  ````http://localhost:8080/swagger-ui/index.html````
+4) (opcional) Criar o arquivo de configuração do Swagger ("com.marcelojssantos.dio.estoquecerveja.config.SwaggerConfig")
+
+**nota**: [Collection do Postman](./collection Postman/APIs Cerveja.postman_collection.json)
